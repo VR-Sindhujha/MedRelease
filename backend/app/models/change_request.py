@@ -73,3 +73,8 @@ class ChangeRequest(Base):
         back_populates="change_request",
         cascade="all, delete-orphan",
     )
+    release_change_requests = relationship(
+        "ReleaseChangeRequest",
+        back_populates="change_request",
+        cascade="all, delete-orphan",
+    )

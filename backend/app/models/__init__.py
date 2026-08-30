@@ -7,3 +7,4 @@ from app.models.change_request import ChangeRequest
 from app.models.change_request_ci import ChangeRequestCI
 from app.models.approval import Approval
 from app.models.release import Release
+from app.models.release_change_request import ReleaseChangeRequest

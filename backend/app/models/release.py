@@ -62,3 +62,8 @@ class Release(Base):
         "User",
         foreign_keys=[created_by_id],
     )
+    release_change_requests = relationship(
+        "ReleaseChangeRequest",
+        back_populates="release",
+        cascade="all, delete-orphan",
+    )
