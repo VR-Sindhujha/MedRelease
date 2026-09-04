@@ -59,6 +59,19 @@ def create_approval(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this organization",
         )
+        if membership.role.upper() not in {"ADMIN", "MANAGER"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to approve or reject change requests",
+            )
+    if change_request.status in {"APPROVED", "REJECTED"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Change request is already {change_request.status.lower()} "
+                "and cannot receive another approval"
+            ),
+        )
 
     decision = payload.decision.upper()
 
@@ -81,6 +94,7 @@ def create_approval(
     )
 
     db.add(approval)
+    change_request.status = decision
     db.commit()
     db.refresh(approval)
 

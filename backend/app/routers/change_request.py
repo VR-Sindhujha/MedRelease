@@ -142,6 +142,11 @@ def update_change_request_status(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this organization",
         )
+    if membership.role.upper() not in {"ADMIN", "MANAGER"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to change change request status",
+        )
 
     allowed_statuses = {
         "PENDING",
@@ -150,13 +155,30 @@ def update_change_request_status(
         "IMPLEMENTING",
         "COMPLETED",
     }
-
+    allowed_transitions = {
+        "PENDING": {"APPROVED", "REJECTED"},
+        "APPROVED": {"IMPLEMENTING"},
+        "REJECTED": {"PENDING"},
+        "IMPLEMENTING": {"COMPLETED"},
+        "COMPLETED": set(),
+    }
     new_status = new_status.upper()
 
     if new_status not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid status. Allowed values: {sorted(allowed_statuses)}",
+        )
+
+    current_status = change_request.status.upper()
+
+    if new_status not in allowed_transitions.get(current_status, set()):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Invalid status transition: "
+                f"{current_status} → {new_status}"
+            ),
         )
 
     change_request.status = new_status
